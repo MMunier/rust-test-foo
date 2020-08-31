@@ -1,9 +1,9 @@
-use std::ops::{Add, Mul, Sub, Neg};
-use std::time::{Duration, Instant};
+use std::ops::{Add, Mul, Neg, Sub};
 use std::thread::sleep;
+use std::time::{Duration, Instant};
 //use std::
 // struct ODESystem<S,F>
-//     where 
+//     where
 //         S: Add<Output=S>,
 //         F: Fn(S) -> S, {
 //     state: S,
@@ -37,9 +37,11 @@ struct Complex<T: Add + Mul + Sub + Clone + Zero> {
     imag: T,
 }
 
-impl<T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Clone + Zero<Output=T>> Add for Complex<T> {
+impl<T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Clone + Zero<Output = T>> Add
+    for Complex<T>
+{
     type Output = Complex<T>;
-    fn add(self, other: Complex<T>) -> Complex<T>{
+    fn add(self, other: Complex<T>) -> Complex<T> {
         Complex {
             real: self.real + other.real,
             imag: self.imag + other.imag,
@@ -47,21 +49,25 @@ impl<T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Clone + Zero<Output=T>> 
     }
 }
 
-impl<T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Clone + Zero<Output=T>> Mul for Complex<T> {
+impl<T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Clone + Zero<Output = T>> Mul
+    for Complex<T>
+{
     type Output = Complex<T>;
-    fn mul(self, other: Complex<T>) -> Complex<T>{
+    fn mul(self, other: Complex<T>) -> Complex<T> {
         let self_copy = self.clone();
         let other_copy = other.clone();
         Complex {
             real: self.real * other.real - self.imag * other.imag,
-            imag: self_copy.real * other_copy.imag + self_copy.imag * other_copy.real
+            imag: self_copy.real * other_copy.imag + self_copy.imag * other_copy.real,
         }
     }
 }
 
-impl<T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Clone + Zero<Output=T>> Mul<T> for Complex<T> {
+impl<T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Clone + Zero<Output = T>> Mul<T>
+    for Complex<T>
+{
     type Output = Complex<T>;
-    fn mul(self, other: T) -> Complex<T>{
+    fn mul(self, other: T) -> Complex<T> {
         Complex {
             real: self.real * other.clone(),
             imag: self.imag * other,
@@ -69,39 +75,46 @@ impl<T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Clone + Zero<Output=T>> 
     }
 }
 
-impl<T: Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Clone + Zero<Output=T>> From<T> for Complex<T> {
-    fn from(orig: T) -> Complex<T>{
+impl<T: Add<Output = T> + Mul<Output = T> + Sub<Output = T> + Clone + Zero<Output = T>> From<T>
+    for Complex<T>
+{
+    fn from(orig: T) -> Complex<T> {
         return Complex {
             real: orig,
             imag: T::zero(),
-        }
+        };
     }
 }
 
-impl<T: Mul+Add+Sub+Clone+Zero> Complex<T> {
-    fn new(real: T, imag:T) -> Complex<T> {
-        Complex {
-            real,
-            imag,
-        }
+impl<T: Mul + Add + Sub + Clone + Zero> Complex<T> {
+    fn new(real: T, imag: T) -> Complex<T> {
+        Complex { real, imag }
     }
 }
 
-impl<T: Neg<Output=T> + Clone + Zero + Add + Mul + Sub> Complex<T> {
+impl<T: Neg<Output = T> + Clone + Zero + Add + Mul + Sub> Complex<T> {
     fn conjugate(mut self) -> Self {
         self.imag = -self.imag.clone();
         self
     }
 }
 
-impl<T: Neg<Output=T> + Add<Output=T> + Mul<Output=T> + Sub<Output=T> + Clone + Zero<Output=T>> Complex<T> {
+impl<
+        T: Neg<Output = T>
+            + Add<Output = T>
+            + Mul<Output = T>
+            + Sub<Output = T>
+            + Clone
+            + Zero<Output = T>,
+    > Complex<T>
+{
     fn abs(self) -> T {
         (self.clone() * self.conjugate()).real
     }
 }
 
 trait ODE {
-    type State: Add<Output=Self::State> + Mul<f64, Output=Self::State> + Clone;
+    type State: Add<Output = Self::State> + Mul<f64, Output = Self::State> + Clone;
     fn diff(&self, S: &Self::State) -> Self::State {
         unimplemented!()
     }
@@ -114,24 +127,28 @@ struct RK4<S: ODE> {
     state: S::State,
 }
 
-
 impl<S: ODE> Iterator for RK4<S> {
     type Item = (f64, S::State);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let df1 = self.system.diff(&self.state);        
-        let df2 = self.system.diff(&(self.state.clone() + df1.clone() * (0.5 * self.delta_t)));
-        let df3 = self.system.diff(&(self.state.clone() + df2.clone() * (0.5 * self.delta_t)));
-        let df4 = self.system.diff(&(self.state.clone() + df3.clone() * (      self.delta_t)));
+        let df1 = self.system.diff(&self.state);
+        let df2 = self
+            .system
+            .diff(&(self.state.clone() + df1.clone() * (0.5 * self.delta_t)));
+        let df3 = self
+            .system
+            .diff(&(self.state.clone() + df2.clone() * (0.5 * self.delta_t)));
+        let df4 = self
+            .system
+            .diff(&(self.state.clone() + df3.clone() * (self.delta_t)));
 
-        let df = df1 * (1.0/6.0) + df2 * (2.0/6.0) + df3 * (2.0/6.0) + df4 * (1.0/6.0); 
+        let df = df1 * (1.0 / 6.0) + df2 * (2.0 / 6.0) + df3 * (2.0 / 6.0) + df4 * (1.0 / 6.0);
         self.state = self.state.clone() + df * self.delta_t;
         self.t += self.delta_t;
-        
-        return Some((self.t, self.state.clone()))
+
+        return Some((self.t, self.state.clone()));
     }
 }
-
 
 struct SimpleDGL {}
 impl ODE for SimpleDGL {
@@ -148,21 +165,26 @@ fn main() {
     let iter = RK4 {
         t: 0.0,
         delta_t: 0.01,
-        system: SimpleDGL{},
+        system: SimpleDGL {},
         state: Complex::from(1.0),
     };
 
     let start_time = Instant::now();
     for i in iter {
-        println!("{:3.3?} {:10.5?}, | {:5.5?} |",i.0, i.1, i.1.clone().abs());
-        sleep(Duration::from_secs_f64(i.0) - start_time.elapsed());
+        println!("{:3.3?} {:10.5?}, | {:5.5?} |", i.0, i.1, i.1.clone().abs());
+        Duration::from_secs_f64(i.0)
+            .checked_sub(start_time.elapsed())
+            .map(|time_ahead| sleep(time_ahead));
     }
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod test {
+    use super::*;
     #[test]
+    #[should_panic]
     fn name() {
-        Duration::from_millis(1) - Duration::from_millis(2); 
+        let _ = Duration::from_millis(1) - Duration::from_millis(2);
+        let _ = Duration::from_secs(1) - Duration::from_secs(2);
     }
 }
